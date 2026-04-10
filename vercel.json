@@ -1,5 +1,9 @@
 {
-  "rewrites": [{ "source": "/((?!api/).*)", "destination": "/index.html" }],
+  "version": 2,
+  "builds": [
+    { "src": "index.html", "use": "@vercel/static" },
+    { "src": "api/*.py", "use": "@vercel/python" }
+  ],
   "crons": [
     {
       "path": "/api/parse",
