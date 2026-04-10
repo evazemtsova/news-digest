@@ -1,55 +1,57 @@
 import os
 import json
+from http.server import BaseHTTPRequestHandler
 from supabase import create_client, Client
 
 
-def handler(event, context):
-    try:
-        # Initialize Supabase client
+class handler(BaseHTTPRequestHandler):
+    def _send_response(self, status_code, data, headers=None):
+        self.send_response(status_code)
+        self.send_header('Content-Type', 'application/json')
+        self.send_header('Access-Control-Allow-Origin', '*')
+        if headers:
+            for key, value in headers.items():
+                self.send_header(key, value)
+        self.end_headers()
+        self.wfile.write(json.dumps(data).encode())
+    
+    def _get_supabase_client(self):
         supabase_url = os.environ.get('SUPABASE_URL')
         supabase_key = os.environ.get('SUPABASE_KEY')
         
         if not supabase_url or not supabase_key:
-            return {
-                'statusCode': 500,
-                'body': json.dumps({'error': 'Missing Supabase configuration'})
-            }
+            raise ValueError('Missing Supabase configuration')
         
-        supabase: Client = create_client(supabase_url, supabase_key)
-        
-        method = event.get('httpMethod', 'GET')
-        
-        if method == 'GET':
-            # Return list of channels
+        return create_client(supabase_url, supabase_key)
+    
+    def do_GET(self):
+        try:
+            supabase = self._get_supabase_client()
             response = supabase.table('channels').select('*').execute()
-            return {
-                'statusCode': 200,
-                'headers': {
-                    'Content-Type': 'application/json',
-                    'Access-Control-Allow-Origin': '*'
-                },
-                'body': json.dumps(response.data)
-            }
+            self._send_response(200, response.data)
+        except Exception as e:
+            self._send_response(500, {'error': str(e)})
+    
+    def do_POST(self):
+        try:
+            supabase = self._get_supabase_client()
             
-        elif method == 'POST':
-            # Add new channel
-            body = json.loads(event.get('body', '{}'))
-            username = body.get('username', '').strip()
-            tag = body.get('tag', 'other')
+            content_length = int(self.headers.get('Content-Length', 0))
+            body = self.rfile.read(content_length).decode('utf-8') if content_length > 0 else '{}'
+            data = json.loads(body)
+            
+            username = data.get('username', '').strip()
+            tag = data.get('tag', 'other')
             
             if not username:
-                return {
-                    'statusCode': 400,
-                    'body': json.dumps({'error': 'Username is required'})
-                }
+                self._send_response(400, {'error': 'Username is required'})
+                return
             
             # Check if channel already exists
             existing = supabase.table('channels').select('id').eq('username', username).execute()
             if existing.data:
-                return {
-                    'statusCode': 409,
-                    'body': json.dumps({'error': 'Channel already exists'})
-                }
+                self._send_response(409, {'error': 'Channel already exists'})
+                return
             
             # Insert new channel
             channel_data = {
@@ -58,44 +60,25 @@ def handler(event, context):
             }
             
             response = supabase.table('channels').insert(channel_data).execute()
-            return {
-                'statusCode': 201,
-                'headers': {
-                    'Content-Type': 'application/json',
-                    'Access-Control-Allow-Origin': '*'
-                },
-                'body': json.dumps(response.data[0])
-            }
+            self._send_response(201, response.data[0])
+        except Exception as e:
+            self._send_response(500, {'error': str(e)})
+    
+    def do_DELETE(self):
+        try:
+            supabase = self._get_supabase_client()
             
-        elif method == 'DELETE':
-            # Delete channel by username
-            body = json.loads(event.get('body', '{}'))
-            username = body.get('username', '').strip()
+            content_length = int(self.headers.get('Content-Length', 0))
+            body = self.rfile.read(content_length).decode('utf-8') if content_length > 0 else '{}'
+            data = json.loads(body)
+            
+            username = data.get('username', '').strip()
             
             if not username:
-                return {
-                    'statusCode': 400,
-                    'body': json.dumps({'error': 'Username is required'})
-                }
+                self._send_response(400, {'error': 'Username is required'})
+                return
             
             response = supabase.table('channels').delete().eq('username', username).execute()
-            return {
-                'statusCode': 200,
-                'headers': {
-                    'Content-Type': 'application/json',
-                    'Access-Control-Allow-Origin': '*'
-                },
-                'body': json.dumps({'message': f'Channel {username} deleted'})
-            }
-            
-        else:
-            return {
-                'statusCode': 405,
-                'body': json.dumps({'error': 'Method not allowed'})
-            }
-            
-    except Exception as e:
-        return {
-            'statusCode': 500,
-            'body': json.dumps({'error': str(e)})
-        }
+            self._send_response(200, {'message': f'Channel {username} deleted'})
+        except Exception as e:
+            self._send_response(500, {'error': str(e)})
