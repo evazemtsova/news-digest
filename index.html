@@ -287,6 +287,9 @@
         async function loadPosts() {
             try {
                 const response = await fetch('/api/posts');
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
                 const posts = await response.json();
                 allPosts = posts;
                 displayPosts(posts);
@@ -302,6 +305,9 @@
         async function loadChannels() {
             try {
                 const response = await fetch('/api/channels');
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
                 channels = await response.json();
             } catch (error) {
                 console.error('Failed to load channels:', error);
@@ -390,8 +396,12 @@
                     showSuccess('Channel added successfully');
                     loadChannels();
                 } else {
-                    const error = await response.json();
-                    showError(error.error || 'Failed to add channel');
+                    try {
+                        const error = await response.json();
+                        showError(error.error || 'Failed to add channel');
+                    } catch {
+                        showError(`Failed to add channel (HTTP ${response.status})`);
+                    }
                 }
             } catch (error) {
                 showError('Failed to add channel: ' + error.message);
