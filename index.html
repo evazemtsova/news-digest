@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ExploiteX — News Digest</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: #0d1117;
+      color: #e6edf3;
+      min-height: 100vh;
+      padding: 2rem 1rem;
+    }
+
+    header {
+      max-width: 720px;
+      margin: 0 auto 2.5rem;
+      border-bottom: 1px solid #21262d;
+      padding-bottom: 1.25rem;
+    }
+
+    header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: #58a6ff;
+      letter-spacing: -0.02em;
+    }
+
+    header p {
+      margin-top: 0.35rem;
+      font-size: 0.85rem;
+      color: #8b949e;
+    }
+
+    .posts {
+      max-width: 720px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    .post {
+      background: #161b22;
+      border: 1px solid #21262d;
+      border-radius: 10px;
+      padding: 1.25rem 1.5rem;
+      transition: border-color 0.15s;
+    }
+
+    .post:hover {
+      border-color: #388bfd;
+    }
+
+    .post-meta {
+      font-size: 0.75rem;
+      color: #8b949e;
+      margin-bottom: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .post-text {
+      font-size: 0.95rem;
+      line-height: 1.65;
+      color: #c9d1d9;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .post-link {
+      display: inline-block;
+      margin-top: 1rem;
+      font-size: 0.8rem;
+      color: #58a6ff;
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    .post-link:hover {
+      text-decoration: underline;
+    }
+
+    footer {
+      max-width: 720px;
+      margin: 2.5rem auto 0;
+      padding-top: 1.25rem;
+      border-top: 1px solid #21262d;
+      font-size: 0.78rem;
+      color: #6e7681;
+      text-align: center;
+    }
+
+    .loading {
+      text-align: center;
+      color: #8b949e;
+      padding: 2rem;
+    }
+
+    .error {
+      text-align: center;
+      color: #f85149;
+      padding: 2rem;
+    }
+
+    @media (max-width: 480px) {
+      body { padding: 1rem 0.75rem; }
+      .post { padding: 1rem; }
+      header h1 { font-size: 1.3rem; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>ExploiteX — News Digest</h1>
+    <p id="status">Loading posts...</p>
+  </header>
+  <main class="posts" id="posts">
+    <div class="loading">Loading posts...</div>
+  </main>
+  <footer>
+    Source: <a href="https://t.me/exploitex" style="color:#58a6ff" target="_blank" rel="noopener">@exploitex</a>
+    &nbsp;·&nbsp; auto-updated every 3 hours
+  </footer>
+
+  <script>
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function formatText(text) {
+      return text.split('\n').map(line => escapeHtml(line)).join('<br>');
+    }
+
+    function renderPost(post) {
+      return `
+        <article class="post">
+          <div class="post-meta">${escapeHtml(post.date)}</div>
+          <div class="post-text">${formatText(post.text)}</div>
+          <a class="post-link" href="${post.link}" target="_blank" rel="noopener">
+            Open in Telegram →
+          </a>
+        </article>
+      `;
+    }
+
+    async function loadPosts() {
+      try {
+        const response = await fetch('posts.json');
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+        const posts = await response.json();
+        
+        const postsContainer = document.getElementById('posts');
+        const statusElement = document.getElementById('status');
+        
+        if (posts.length === 0) {
+          postsContainer.innerHTML = '<div class="loading">No posts available yet.</div>';
+          statusElement.textContent = 'No posts available';
+        } else {
+          const postsHtml = posts.map(renderPost).join('');
+          postsContainer.innerHTML = postsHtml;
+          statusElement.textContent = `${posts.length} posts · Updated dynamically`;
+        }
+      } catch (error) {
+        console.error('Error loading posts:', error);
+        const postsContainer = document.getElementById('posts');
+        const statusElement = document.getElementById('status');
+        postsContainer.innerHTML = '<div class="error">Error loading posts. Please check the console for details.</div>';
+        statusElement.textContent = 'Error loading posts';
+      }
+    }
+
+    // Load posts on page load
+    loadPosts();
+  </script>
+</body>
+</html>

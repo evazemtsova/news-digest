@@ -1,6 +1,8 @@
 import requests
 from bs4 import BeautifulSoup
 from datetime import datetime, timezone
+import json
+import os
 
 URL = "https://t.me/s/exploitex"
 MAX_POSTS = 20
@@ -46,160 +48,38 @@ def fetch_posts():
     return list(reversed(posts))[:MAX_POSTS]
 
 
-def escape_html(text: str) -> str:
-    return (
-        text.replace("&", "&amp;")
-            .replace("<", "&lt;")
-            .replace(">", "&gt;")
-            .replace('"', "&quot;")
-    )
+def load_existing_posts():
+    if not os.path.exists("posts.json"):
+        return []
+    try:
+        with open("posts.json", "r", encoding="utf-8") as f:
+            return json.load(f)
+    except (json.JSONDecodeError, IOError):
+        return []
 
 
-def render_post(post: dict) -> str:
-    text_html = "<br>".join(escape_html(line) for line in post["text"].splitlines())
-    return f"""
-    <article class="post">
-      <div class="post-meta">{escape_html(post["date"])}</div>
-      <div class="post-text">{text_html}</div>
-      <a class="post-link" href="{post["link"]}" target="_blank" rel="noopener">
-        Open in Telegram →
-      </a>
-    </article>"""
-
-
-def generate_html(posts: list) -> str:
-    updated = datetime.now(timezone.utc).strftime("%d %b %Y, %H:%M UTC")
-    posts_html = "\n".join(render_post(p) for p in posts)
-    count = len(posts)
-
-    return f"""<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ExploiteX — News Digest</title>
-  <style>
-    *, *::before, *::after {{ box-sizing: border-box; margin: 0; padding: 0; }}
-
-    body {{
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background: #0d1117;
-      color: #e6edf3;
-      min-height: 100vh;
-      padding: 2rem 1rem;
-    }}
-
-    header {{
-      max-width: 720px;
-      margin: 0 auto 2.5rem;
-      border-bottom: 1px solid #21262d;
-      padding-bottom: 1.25rem;
-    }}
-
-    header h1 {{
-      font-size: 1.6rem;
-      font-weight: 700;
-      color: #58a6ff;
-      letter-spacing: -0.02em;
-    }}
-
-    header p {{
-      margin-top: 0.35rem;
-      font-size: 0.85rem;
-      color: #8b949e;
-    }}
-
-    .posts {{
-      max-width: 720px;
-      margin: 0 auto;
-      display: flex;
-      flex-direction: column;
-      gap: 1.25rem;
-    }}
-
-    .post {{
-      background: #161b22;
-      border: 1px solid #21262d;
-      border-radius: 10px;
-      padding: 1.25rem 1.5rem;
-      transition: border-color 0.15s;
-    }}
-
-    .post:hover {{
-      border-color: #388bfd;
-    }}
-
-    .post-meta {{
-      font-size: 0.75rem;
-      color: #8b949e;
-      margin-bottom: 0.65rem;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-    }}
-
-    .post-text {{
-      font-size: 0.95rem;
-      line-height: 1.65;
-      color: #c9d1d9;
-      white-space: pre-wrap;
-      word-break: break-word;
-    }}
-
-    .post-link {{
-      display: inline-block;
-      margin-top: 1rem;
-      font-size: 0.8rem;
-      color: #58a6ff;
-      text-decoration: none;
-      font-weight: 500;
-    }}
-
-    .post-link:hover {{
-      text-decoration: underline;
-    }}
-
-    footer {{
-      max-width: 720px;
-      margin: 2.5rem auto 0;
-      padding-top: 1.25rem;
-      border-top: 1px solid #21262d;
-      font-size: 0.78rem;
-      color: #6e7681;
-      text-align: center;
-    }}
-
-    @media (max-width: 480px) {{
-      body {{ padding: 1rem 0.75rem; }}
-      .post {{ padding: 1rem; }}
-      header h1 {{ font-size: 1.3rem; }}
-    }}
-  </style>
-</head>
-<body>
-  <header>
-    <h1>ExploiteX — News Digest</h1>
-    <p>Last {count} posts &nbsp;·&nbsp; Updated {updated}</p>
-  </header>
-  <main class="posts">
-{posts_html}
-  </main>
-  <footer>
-    Source: <a href="https://t.me/exploitex" style="color:#58a6ff" target="_blank" rel="noopener">@exploitex</a>
-    &nbsp;·&nbsp; auto-updated every 3 hours
-  </footer>
-</body>
-</html>
-"""
+def save_posts_to_json(posts):
+    with open("posts.json", "w", encoding="utf-8") as f:
+        json.dump(posts, f, ensure_ascii=False, indent=2)
 
 
 def main():
     print("Fetching posts from", URL)
-    posts = fetch_posts()
-    print(f"Got {len(posts)} posts")
-    html = generate_html(posts)
-    with open("index.html", "w", encoding="utf-8") as f:
-        f.write(html)
-    print("index.html written")
+    new_posts = fetch_posts()
+    print(f"Got {len(new_posts)} new posts from source")
+    
+    existing_posts = load_existing_posts()
+    existing_links = {post["link"] for post in existing_posts}
+    
+    unique_new_posts = [post for post in new_posts if post["link"] not in existing_links]
+    print(f"Found {len(unique_new_posts)} new unique posts")
+    
+    if unique_new_posts:
+        all_posts = unique_new_posts + existing_posts
+        save_posts_to_json(all_posts)
+        print(f"Updated posts.json with {len(all_posts)} total posts")
+    else:
+        print("No new posts to add")
 
 
 if __name__ == "__main__":
