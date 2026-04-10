@@ -23,8 +23,3 @@ jobs:
 
       - name: Parse channel and generate index.html
         run: python parser.py
-
-      - name: Deploy to Vercel
-        run: npx vercel --prod --yes --token "$VERCEL_TOKEN"
-        env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
