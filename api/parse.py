@@ -26,7 +26,14 @@ class handler(BaseHTTPRequestHandler):
             raise ValueError('Missing Supabase configuration')
         
         return create_client(supabase_url, supabase_key)
-    
+
+    def do_OPTIONS(self):
+        self.send_response(200)
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.send_header('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS')
+        self.send_header('Access-Control-Allow-Headers', 'Content-Type')
+        self.end_headers()
+
     def do_GET(self):
         try:
             supabase = self._get_supabase_client()
@@ -61,6 +68,10 @@ class handler(BaseHTTPRequestHandler):
                     resp.raise_for_status()
                     soup = BeautifulSoup(resp.text, "html.parser")
                     
+                    # Load all known links for this channel upfront (avoids N+1 queries)
+                    existing_links_response = supabase.table('posts').select('link').eq('channel', username).execute()
+                    existing_links = {row['link'] for row in existing_links_response.data}
+
                     # Parse posts
                     for msg in soup.select(".tgme_widget_message"):
                         # Extract text
@@ -68,7 +79,7 @@ class handler(BaseHTTPRequestHandler):
                         text = text_el.get_text("\n", strip=True) if text_el else ""
                         if not text:
                             continue
-                        
+
                         # Extract date and link
                         time_el = msg.select_one(".tgme_widget_message_date time")
                         date_str = ""
@@ -78,15 +89,14 @@ class handler(BaseHTTPRequestHandler):
                                 date_str = dt.astimezone(timezone.utc).isoformat()
                             except ValueError:
                                 date_str = datetime.now(timezone.utc).isoformat()
-                        
+
                         link_el = msg.select_one(".tgme_widget_message_date")
                         link = link_el.get("href", url) if link_el else url
-                        
-                        # Check if post already exists (deduplication)
-                        existing_post = supabase.table('posts').select('id').eq('link', link).execute()
-                        if existing_post.data:
-                            continue  # Skip if already exists
-                        
+
+                        # Skip if already exists (O(1) set lookup)
+                        if link in existing_links:
+                            continue
+
                         # Insert new post
                         post_data = {
                             'text': text,

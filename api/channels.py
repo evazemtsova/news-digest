@@ -23,7 +23,14 @@ class handler(BaseHTTPRequestHandler):
             raise ValueError('Missing Supabase configuration')
         
         return create_client(supabase_url, supabase_key)
-    
+
+    def do_OPTIONS(self):
+        self.send_response(200)
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.send_header('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS')
+        self.send_header('Access-Control-Allow-Headers', 'Content-Type')
+        self.end_headers()
+
     def do_GET(self):
         try:
             supabase = self._get_supabase_client()
