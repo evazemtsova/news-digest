@@ -1,9 +1,17 @@
 {
-  "functions": {
-    "api/*.py": { "runtime": "python3.9" }
-  },
-  "crons": [{
-    "path": "/api/parse",
-    "schedule": "0 */3 * * *"
-  }]
+  "version": 2,
+  "builds": [
+    { "src": "index.html", "use": "@vercel/static" },
+    { "src": "api/*.py", "use": "@vercel/python" }
+  ],
+  "routes": [
+    { "src": "/api/(.*)", "dest": "/api/$1" },
+    { "src": "/(.*)", "dest": "/index.html" }
+  ],
+  "crons": [
+    {
+      "path": "/api/parse",
+      "schedule": "0 */3 * * *"
+    }
+  ]
 }
