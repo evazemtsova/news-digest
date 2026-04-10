@@ -1,0 +1,9 @@
+{
+  "functions": {
+    "api/*.py": { "runtime": "python3.9" }
+  },
+  "crons": [{
+    "path": "/api/parse",
+    "schedule": "0 */3 * * *"
+  }]
+}
