@@ -1,184 +1,428 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ExploiteX — News Digest</title>
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>News Digest</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background: #0d1117;
-      color: #e6edf3;
-      min-height: 100vh;
-      padding: 2rem 1rem;
-    }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            background-color: #0d1117;
+            color: #f0f6fc;
+            line-height: 1.5;
+        }
 
-    header {
-      max-width: 720px;
-      margin: 0 auto 2.5rem;
-      border-bottom: 1px solid #21262d;
-      padding-bottom: 1.25rem;
-    }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
 
-    header h1 {
-      font-size: 1.6rem;
-      font-weight: 700;
-      color: #58a6ff;
-      letter-spacing: -0.02em;
-    }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #58a6ff;
+        }
 
-    header p {
-      margin-top: 0.35rem;
-      font-size: 0.85rem;
-      color: #8b949e;
-    }
+        .channel-form {
+            background: #21262d;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
 
-    .posts {
-      max-width: 720px;
-      margin: 0 auto;
-      display: flex;
-      flex-direction: column;
-      gap: 1.25rem;
-    }
+        .form-group {
+            display: flex;
+            gap: 10px;
+            align-items: end;
+            flex-wrap: wrap;
+        }
 
-    .post {
-      background: #161b22;
-      border: 1px solid #21262d;
-      border-radius: 10px;
-      padding: 1.25rem 1.5rem;
-      transition: border-color 0.15s;
-    }
+        .form-field {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
 
-    .post:hover {
-      border-color: #388bfd;
-    }
+        label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #f0f6fc;
+        }
 
-    .post-meta {
-      font-size: 0.75rem;
-      color: #8b949e;
-      margin-bottom: 0.65rem;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-    }
+        input, select {
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            padding: 8px 12px;
+            color: #f0f6fc;
+            font-size: 14px;
+        }
 
-    .post-text {
-      font-size: 0.95rem;
-      line-height: 1.65;
-      color: #c9d1d9;
-      white-space: pre-wrap;
-      word-break: break-word;
-    }
+        input:focus, select:focus {
+            outline: none;
+            border-color: #58a6ff;
+        }
 
-    .post-link {
-      display: inline-block;
-      margin-top: 1rem;
-      font-size: 0.8rem;
-      color: #58a6ff;
-      text-decoration: none;
-      font-weight: 500;
-    }
+        button {
+            background: #238636;
+            border: 1px solid #2ea043;
+            border-radius: 6px;
+            color: white;
+            padding: 8px 16px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            height: fit-content;
+        }
 
-    .post-link:hover {
-      text-decoration: underline;
-    }
+        button:hover {
+            background: #2ea043;
+        }
 
-    footer {
-      max-width: 720px;
-      margin: 2.5rem auto 0;
-      padding-top: 1.25rem;
-      border-top: 1px solid #21262d;
-      font-size: 0.78rem;
-      color: #6e7681;
-      text-align: center;
-    }
+        button:active {
+            background: #1a7f37;
+        }
 
-    .loading {
-      text-align: center;
-      color: #8b949e;
-      padding: 2rem;
-    }
+        .filters {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
 
-    .error {
-      text-align: center;
-      color: #f85149;
-      padding: 2rem;
-    }
+        .filter-btn {
+            background: #21262d;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            color: #f0f6fc;
+            padding: 6px 12px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.15s;
+        }
 
-    @media (max-width: 480px) {
-      body { padding: 1rem 0.75rem; }
-      .post { padding: 1rem; }
-      header h1 { font-size: 1.3rem; }
-    }
-  </style>
+        .filter-btn:hover {
+            background: #30363d;
+        }
+
+        .filter-btn.active {
+            background: #58a6ff;
+            border-color: #58a6ff;
+            color: #0d1117;
+        }
+
+        .posts-grid {
+            display: grid;
+            gap: 20px;
+        }
+
+        .post-card {
+            background: #21262d;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            padding: 20px;
+            transition: border-color 0.15s;
+        }
+
+        .post-card:hover {
+            border-color: #58a6ff;
+        }
+
+        .post-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .post-meta {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+            color: #8b949e;
+        }
+
+        .channel-name {
+            font-weight: 600;
+            color: #f0f6fc;
+        }
+
+        .tag-badge {
+            background: #58a6ff;
+            color: #0d1117;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .tag-badge.tech { background: #58a6ff; }
+        .tag-badge.ml { background: #a5f3fc; }
+        .tag-badge.product { background: #fbbf24; }
+        .tag-badge.lifestyle { background: #fb7185; }
+        .tag-badge.other { background: #8b949e; }
+
+        .post-text {
+            margin-bottom: 15px;
+            white-space: pre-wrap;
+        }
+
+        .post-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .post-date {
+            font-size: 14px;
+            color: #8b949e;
+        }
+
+        .telegram-btn {
+            background: #0088cc;
+            border: 1px solid #0088cc;
+            text-decoration: none;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 500;
+            display: inline-block;
+        }
+
+        .telegram-btn:hover {
+            background: #006699;
+            border-color: #006699;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #8b949e;
+        }
+
+        .error {
+            background: #da3633;
+            color: white;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .form-group {
+                flex-direction: column;
+            }
+            
+            .form-field {
+                width: 100%;
+            }
+        }
+    </style>
 </head>
 <body>
-  <header>
-    <h1>ExploiteX — News Digest</h1>
-    <p id="status">Loading posts...</p>
-  </header>
-  <main class="posts" id="posts">
-    <div class="loading">Loading posts...</div>
-  </main>
-  <footer>
-    Source: <a href="https://t.me/exploitex" style="color:#58a6ff" target="_blank" rel="noopener">@exploitex</a>
-    &nbsp;·&nbsp; auto-updated every 3 hours
-  </footer>
-
-  <script>
-    function escapeHtml(text) {
-      const div = document.createElement('div');
-      div.textContent = text;
-      return div.innerHTML;
-    }
-
-    function formatText(text) {
-      return text.split('\n').map(line => escapeHtml(line)).join('<br>');
-    }
-
-    function renderPost(post) {
-      return `
-        <article class="post">
-          <div class="post-meta">${escapeHtml(post.date)}</div>
-          <div class="post-text">${formatText(post.text)}</div>
-          <a class="post-link" href="${post.link}" target="_blank" rel="noopener">
-            Open in Telegram →
-          </a>
-        </article>
-      `;
-    }
-
-    async function loadPosts() {
-      try {
-        const response = await fetch('posts.json');
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`);
-        }
-        const posts = await response.json();
+    <div class="container">
+        <h1>🗞️ News Digest</h1>
         
-        const postsContainer = document.getElementById('posts');
-        const statusElement = document.getElementById('status');
-        
-        if (posts.length === 0) {
-          postsContainer.innerHTML = '<div class="loading">No posts available yet.</div>';
-          statusElement.textContent = 'No posts available';
-        } else {
-          const postsHtml = posts.map(renderPost).join('');
-          postsContainer.innerHTML = postsHtml;
-          statusElement.textContent = `${posts.length} posts · Updated dynamically`;
-        }
-      } catch (error) {
-        console.error('Error loading posts:', error);
-        const postsContainer = document.getElementById('posts');
-        const statusElement = document.getElementById('status');
-        postsContainer.innerHTML = '<div class="error">Error loading posts. Please check the console for details.</div>';
-        statusElement.textContent = 'Error loading posts';
-      }
-    }
+        <div class="channel-form">
+            <div class="form-group">
+                <div class="form-field">
+                    <label for="username">Channel Username</label>
+                    <input type="text" id="username" placeholder="exploitex (without @)" />
+                </div>
+                <div class="form-field">
+                    <label for="tag">Tag</label>
+                    <select id="tag">
+                        <option value="tech">Tech</option>
+                        <option value="ML">ML</option>
+                        <option value="product">Product</option>
+                        <option value="lifestyle">Lifestyle</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <button onclick="addChannel()">Add Channel</button>
+            </div>
+        </div>
 
-    // Load posts on page load
-    loadPosts();
-  </script>
+        <div id="error-container"></div>
+
+        <div class="filters">
+            <button class="filter-btn active" data-filter="all">All</button>
+        </div>
+
+        <div id="loading" class="loading">Loading posts...</div>
+        <div id="posts-container" class="posts-grid" style="display: none;"></div>
+    </div>
+
+    <script>
+        let allPosts = [];
+        let channels = [];
+        let currentFilter = 'all';
+
+        async function loadPosts() {
+            try {
+                const response = await fetch('/api/posts');
+                const posts = await response.json();
+                allPosts = posts;
+                displayPosts(posts);
+                updateFilters();
+            } catch (error) {
+                showError('Failed to load posts: ' + error.message);
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('posts-container').style.display = 'block';
+            }
+        }
+
+        async function loadChannels() {
+            try {
+                const response = await fetch('/api/channels');
+                channels = await response.json();
+            } catch (error) {
+                console.error('Failed to load channels:', error);
+            }
+        }
+
+        function displayPosts(posts) {
+            const container = document.getElementById('posts-container');
+            
+            if (posts.length === 0) {
+                container.innerHTML = '<div class="loading">No posts found</div>';
+                return;
+            }
+
+            container.innerHTML = posts.map(post => `
+                <div class="post-card">
+                    <div class="post-header">
+                        <div class="post-meta">
+                            <span class="channel-name">@${post.channel}</span>
+                            <span class="tag-badge ${post.tag.toLowerCase()}">${post.tag}</span>
+                        </div>
+                    </div>
+                    <div class="post-text">${post.text}</div>
+                    <div class="post-actions">
+                        <span class="post-date">${formatDate(post.date)}</span>
+                        <a href="${post.link}" target="_blank" class="telegram-btn">Open in Telegram</a>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateFilters() {
+            const tags = [...new Set(allPosts.map(post => post.tag))];
+            const filtersContainer = document.querySelector('.filters');
+            
+            filtersContainer.innerHTML = `
+                <button class="filter-btn ${currentFilter === 'all' ? 'active' : ''}" data-filter="all">All</button>
+                ${tags.map(tag => `
+                    <button class="filter-btn ${currentFilter === tag ? 'active' : ''}" data-filter="${tag}">${tag}</button>
+                `).join('')}
+            `;
+
+            // Add event listeners
+            filtersContainer.addEventListener('click', (e) => {
+                if (e.target.classList.contains('filter-btn')) {
+                    currentFilter = e.target.dataset.filter;
+                    updateActiveFilter();
+                    filterPosts();
+                }
+            });
+        }
+
+        function updateActiveFilter() {
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.filter === currentFilter);
+            });
+        }
+
+        function filterPosts() {
+            const filteredPosts = currentFilter === 'all' 
+                ? allPosts 
+                : allPosts.filter(post => post.tag === currentFilter);
+            displayPosts(filteredPosts);
+        }
+
+        async function addChannel() {
+            const username = document.getElementById('username').value.trim();
+            const tag = document.getElementById('tag').value;
+
+            if (!username) {
+                showError('Please enter a channel username');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/channels', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ username, tag })
+                });
+
+                if (response.ok) {
+                    document.getElementById('username').value = '';
+                    showSuccess('Channel added successfully');
+                    loadChannels();
+                } else {
+                    const error = await response.json();
+                    showError(error.error || 'Failed to add channel');
+                }
+            } catch (error) {
+                showError('Failed to add channel: ' + error.message);
+            }
+        }
+
+        function formatDate(dateStr) {
+            try {
+                const date = new Date(dateStr);
+                return date.toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            } catch {
+                return dateStr;
+            }
+        }
+
+        function showError(message) {
+            const container = document.getElementById('error-container');
+            container.innerHTML = `<div class="error">${message}</div>`;
+            setTimeout(() => container.innerHTML = '', 5000);
+        }
+
+        function showSuccess(message) {
+            const container = document.getElementById('error-container');
+            container.innerHTML = `<div class="error" style="background: #238636;">${message}</div>`;
+            setTimeout(() => container.innerHTML = '', 3000);
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadPosts();
+            loadChannels();
+        });
+
+        // Allow Enter key to add channel
+        document.getElementById('username').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                addChannel();
+            }
+        });
+    </script>
 </body>
 </html>
