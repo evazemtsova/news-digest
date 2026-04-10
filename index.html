@@ -220,6 +220,14 @@
             margin-bottom: 20px;
         }
 
+        .success {
+            background: #238636;
+            color: white;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+
         @media (max-width: 768px) {
             .form-group {
                 flex-direction: column;
@@ -245,7 +253,7 @@
                     <label for="tag">Tag</label>
                     <select id="tag">
                         <option value="tech">Tech</option>
-                        <option value="ML">ML</option>
+                        <option value="ml">ML</option>
                         <option value="product">Product</option>
                         <option value="lifestyle">Lifestyle</option>
                         <option value="other">Other</option>
@@ -269,6 +277,12 @@
         let allPosts = [];
         let channels = [];
         let currentFilter = 'all';
+
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.appendChild(document.createTextNode(String(str)));
+            return div.innerHTML;
+        }
 
         async function loadPosts() {
             try {
@@ -306,14 +320,14 @@
                 <div class="post-card">
                     <div class="post-header">
                         <div class="post-meta">
-                            <span class="channel-name">@${post.channel}</span>
-                            <span class="tag-badge ${post.tag.toLowerCase()}">${post.tag}</span>
+                            <span class="channel-name">@${escapeHtml(post.channel)}</span>
+                            <span class="tag-badge ${escapeHtml(post.tag.toLowerCase())}">${escapeHtml(post.tag)}</span>
                         </div>
                     </div>
-                    <div class="post-text">${post.text}</div>
+                    <div class="post-text">${escapeHtml(post.text)}</div>
                     <div class="post-actions">
                         <span class="post-date">${formatDate(post.date)}</span>
-                        <a href="${post.link}" target="_blank" class="telegram-btn">Open in Telegram</a>
+                        <a href="${escapeHtml(post.link)}" target="_blank" class="telegram-btn">Open in Telegram</a>
                     </div>
                 </div>
             `).join('');
@@ -401,13 +415,13 @@
 
         function showError(message) {
             const container = document.getElementById('error-container');
-            container.innerHTML = `<div class="error">${message}</div>`;
+            container.innerHTML = `<div class="error">${escapeHtml(message)}</div>`;
             setTimeout(() => container.innerHTML = '', 5000);
         }
 
         function showSuccess(message) {
             const container = document.getElementById('error-container');
-            container.innerHTML = `<div class="error" style="background: #238636;">${message}</div>`;
+            container.innerHTML = `<div class="success">${escapeHtml(message)}</div>`;
             setTimeout(() => container.innerHTML = '', 3000);
         }
 
