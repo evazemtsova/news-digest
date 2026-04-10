@@ -1,9 +1,9 @@
-name: Telegram Digest → Vercel
+name: Telegram Digest
 
 on:
   schedule:
-    - cron: "0 */3 * * *"   # every 3 hours
-  workflow_dispatch:          # manual trigger
+    - cron: "0 */3 * * *"
+  workflow_dispatch:
 
 jobs:
   build-and-deploy:
@@ -21,13 +21,13 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Parse channel and generate index.html
+      - name: Parse channel
         run: python parser.py
 
       - name: Commit and push posts.json
-      run: |
-        git config user.name "github-actions[bot]"
-        git config user.email "github-actions[bot]@users.noreply.github.com"
-        git add posts.json
-        git diff --staged --quiet || git commit -m "Update posts.json"
-        git push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add posts.json
+          git diff --staged --quiet || git commit -m "Update posts.json"
+          git push
